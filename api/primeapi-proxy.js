@@ -17,8 +17,11 @@ export default async function handler(req, res) {
   const PRIMEAPI_KEY = process.env.VITE_PRIMEAPI_KEY;
   
   if (!PRIMEAPI_KEY) {
+    console.error('❌ PrimeAPI key not found in environment variables');
     return res.status(500).json({ error: 'PrimeAPI key not configured' });
   }
+  
+  console.log('✅ PrimeAPI key found, making request for username:', username);
 
   try {
     const response = await fetch(`https://api.primeapi.co/tiktok/user/info?username=${username}`, {
