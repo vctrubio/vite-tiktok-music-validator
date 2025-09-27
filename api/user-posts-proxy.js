@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    let url = `https://api.primeapi.co/tiktok/user/posts?secUid=${secUid}&count=${count}`;
+    let url = `https://api.primeapi.co/user-posts?secUid=${secUid}&count=${count}`;
     if (cursor) {
       url += `&cursor=${cursor}`;
     }

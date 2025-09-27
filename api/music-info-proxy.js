@@ -21,7 +21,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`https://api.primeapi.co/tiktok/music/info?musicId=${musicId}`, {
+    const response = await fetch(`https://api.primeapi.co/music-info?musicId=${musicId}`, {
       headers: {
         'X-PrimeAPI-Key': PRIMEAPI_KEY,
         'Content-Type': 'application/json'

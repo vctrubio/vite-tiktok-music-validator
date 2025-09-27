@@ -24,22 +24,32 @@ export default async function handler(req, res) {
   console.log('✅ PrimeAPI key found, making request for username:', username);
 
   try {
-    const response = await fetch(`https://api.primeapi.co/tiktok/user/info?username=${username}`, {
+    const apiUrl = `https://api.primeapi.co/userinfo-by-username?username=${username}`;
+    console.log('🚀 Making PrimeAPI request to:', apiUrl);
+    console.log('🔑 Using API Key (first 10 chars):', PRIMEAPI_KEY.substring(0, 10) + '...');
+    
+    const response = await fetch(apiUrl, {
       headers: {
         'X-PrimeAPI-Key': PRIMEAPI_KEY,
         'Content-Type': 'application/json'
       }
     });
 
+    console.log('📡 Response status:', response.status);
+    console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
+    
     const data = await response.json();
+    console.log('📦 Response data:', JSON.stringify(data, null, 2));
     
     if (!response.ok) {
-      throw new Error(`PrimeAPI error: ${data.message || 'Unknown error'}`);
+      console.error('❌ PrimeAPI error response:', data);
+      throw new Error(`PrimeAPI error: ${data.message || data.error || 'Unknown error'}`);
     }
 
+    console.log('✅ PrimeAPI request successful');
     res.status(200).json(data);
   } catch (error) {
-    console.error('PrimeAPI proxy error:', error);
+    console.error('❌ PrimeAPI proxy error:', error);
     res.status(500).json({ error: error.message });
   }
 }
