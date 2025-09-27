@@ -1,49 +1,39 @@
 import { useState, useEffect } from 'react'
 import AirtableApiEndpoint from './AirtableApiEndpoint'
+import ValidateSongs from './ValidateSongs'
 
 function Songs() {
-  const [songs, setSongs] = useState([])
+  const [allSongs, setAllSongs] = useState([]) // Store all songs from API
+  const [filteredSongs, setFilteredSongs] = useState([]) // Filtered songs for display
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all') // all, available, unavailable
+  const [selectedSongs, setSelectedSongs] = useState(new Set()) // Selected song IDs
+  const [selectAll, setSelectAll] = useState(false)
+  const [validationInProgress, setValidationInProgress] = useState(false)
+  const [validationProgress, setValidationProgress] = useState(null)
+  const [validationResults, setValidationResults] = useState(null)
   const [api] = useState(() => new AirtableApiEndpoint())
+  const [validator] = useState(() => new ValidateSongs(api))
 
   useEffect(() => {
-    loadSongs()
-  }, [filter])
+    loadAllSongs()
+  }, [])
 
-  const loadSongs = async () => {
+  useEffect(() => {
+    filterSongs()
+  }, [filter, allSongs])
+
+  const loadAllSongs = async () => {
     try {
       setLoading(true)
       setError(null)
       
-      let songsResponse, postsResponse, usersResponse
-      
-      if (filter === 'available') {
-        [songsResponse, postsResponse, usersResponse] = await Promise.all([
-          api.getRecords('songs', {
-            filterByFormula: `{Availability Status} = "Available"`,
-            sort: [{ field: 'Last Checked', direction: 'desc' }]
-          }),
-          api.getRecords('posts'),
-          api.getRecords('users')
-        ])
-      } else if (filter === 'unavailable') {
-        [songsResponse, postsResponse, usersResponse] = await Promise.all([
-          api.getRecords('songs', {
-            filterByFormula: `{Availability Status} = "Unavailable"`,
-            sort: [{ field: 'Last Checked', direction: 'desc' }]
-          }),
-          api.getRecords('posts'),
-          api.getRecords('users')
-        ])
-      } else {
-        [songsResponse, postsResponse, usersResponse] = await Promise.all([
-          api.getSongsWithStatus(),
-          api.getRecords('posts'),
-          api.getRecords('users')
-        ])
-      }
+      const [songsResponse, postsResponse, usersResponse] = await Promise.all([
+        api.getSongsWithStatus(),
+        api.getRecords('posts'),
+        api.getRecords('users')
+      ])
       
       const songsData = songsResponse.records || []
       const postsData = postsResponse.records || []
@@ -65,7 +55,7 @@ function Songs() {
         }
       })
       
-      setSongs(songsWithDetails)
+      setAllSongs(songsWithDetails)
     } catch (err) {
       setError(err.message)
       console.error('Failed to load songs:', err)
@@ -74,8 +64,80 @@ function Songs() {
     }
   }
 
+  const filterSongs = () => {
+    if (filter === 'available') {
+      setFilteredSongs(allSongs.filter(song => 
+        extractValue(song.fields['Availability Status']) === 'Available'
+      ))
+    } else if (filter === 'unavailable') {
+      setFilteredSongs(allSongs.filter(song => 
+        extractValue(song.fields['Availability Status']) === 'Unavailable'
+      ))
+    } else {
+      setFilteredSongs(allSongs)
+    }
+    setSelectedSongs(new Set()) // Clear selection when filtering
+    setSelectAll(false)
+  }
+
   const refreshData = () => {
-    loadSongs()
+    loadAllSongs()
+  }
+
+  // Selection handlers
+  const handleSongSelect = (songId) => {
+    const newSelection = new Set(selectedSongs)
+    if (newSelection.has(songId)) {
+      newSelection.delete(songId)
+    } else {
+      newSelection.add(songId)
+    }
+    setSelectedSongs(newSelection)
+    setSelectAll(newSelection.size === filteredSongs.length && filteredSongs.length > 0)
+  }
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedSongs(new Set())
+      setSelectAll(false)
+    } else {
+      const allVisibleIds = new Set(filteredSongs.map(song => song.id))
+      setSelectedSongs(allVisibleIds)
+      setSelectAll(true)
+    }
+  }
+
+  // Validation handlers
+  const handleValidateSelected = async () => {
+    if (selectedSongs.size === 0) return
+    
+    setValidationInProgress(true)
+    setValidationProgress(null)
+    setValidationResults(null)
+    
+    const selectedSongRecords = filteredSongs.filter(song => selectedSongs.has(song.id))
+    
+    try {
+      const results = await validator.validateSongsInBatch(selectedSongRecords, (progress) => {
+        setValidationProgress(progress)
+      })
+      
+      setValidationResults(results)
+      const summary = validator.generateValidationSummary(results)
+      
+      // Refresh data to show updated status
+      await loadAllSongs()
+      
+      // Clear selection after validation
+      setSelectedSongs(new Set())
+      setSelectAll(false)
+      
+    } catch (error) {
+      setError(`Validation failed: ${error.message}`)
+    } finally {
+      setValidationInProgress(false)
+      setValidationProgress(null)
+    }
   }
 
   const getStatusColor = (status) => {
@@ -125,7 +187,42 @@ function Songs() {
           >
             {loading ? 'Loading...' : '🔄 Refresh Data'}
           </button>
+          
+          {selectedSongs.size > 0 && (
+            <button 
+              onClick={handleValidateSelected}
+              disabled={validationInProgress}
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-lg disabled:opacity-50"
+            >
+              {validationInProgress ? 'Validating...' : `🔍 Validate Selected (${selectedSongs.size})`}
+            </button>
+          )}
         </div>
+
+        {validationProgress && (
+          <div className="bg-blue-900 border border-blue-700 rounded-lg p-4 mb-6">
+            <p className="text-blue-300 font-semibold">🔄 Validation Progress:</p>
+            <p className="text-blue-200 text-sm">{validator.getProgressMessage(validationProgress)}</p>
+            <div className="w-full bg-blue-800 rounded-full h-2 mt-2">
+              <div 
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                style={{ width: `${(validationProgress.current / validationProgress.total) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {validationResults && (
+          <div className="bg-green-900 border border-green-700 rounded-lg p-4 mb-6">
+            <p className="text-green-300 font-semibold">✅ Validation Complete!</p>
+            <div className="text-green-200 text-sm mt-2">
+              <p>• Total validated: {validator.generateValidationSummary(validationResults).validated}</p>
+              <p>• Available: {validator.generateValidationSummary(validationResults).available}</p>
+              <p>• Unavailable: {validator.generateValidationSummary(validationResults).unavailable}</p>
+              <p>• Records updated: {validator.generateValidationSummary(validationResults).updated}</p>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 justify-center">
           <button
@@ -164,7 +261,14 @@ function Songs() {
 
       <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-white">Songs ({songs.length})</h2>
+          <h2 className="text-2xl font-bold text-white">
+            Songs ({filteredSongs.length}{filteredSongs.length !== allSongs.length ? ` of ${allSongs.length}` : ''})
+            {selectedSongs.size > 0 && (
+              <span className="text-purple-400 text-lg ml-4">
+                {selectedSongs.size} selected
+              </span>
+            )}
+          </h2>
           <span className="text-gray-400 text-sm">
             {loading ? 'Loading...' : 'From Airtable'}
           </span>
@@ -175,13 +279,22 @@ function Songs() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
             <p className="text-gray-400 mt-2">Loading songs from Airtable...</p>
           </div>
-        ) : songs.length === 0 ? (
-          <p className="text-gray-400 text-center py-8">No songs found in Airtable</p>
+        ) : filteredSongs.length === 0 ? (
+          <p className="text-gray-400 text-center py-8">No songs found {filter !== 'all' ? `for filter "${filter}"` : 'in Airtable'}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-900">
                 <tr>
+                  <th className="px-4 py-3 text-gray-300 font-medium w-12">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      disabled={filteredSongs.length === 0}
+                      className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+                    />
+                  </th>
                   <th className="px-4 py-3 text-gray-300 font-medium">Song ID</th>
                   <th className="px-4 py-3 text-gray-300 font-medium">Music Title</th>
                   <th className="px-4 py-3 text-gray-300 font-medium">Username</th>
@@ -192,8 +305,16 @@ function Songs() {
                 </tr>
               </thead>
               <tbody>
-                {songs.map((song, index) => (
-                  <tr key={song.id} className={`border-b border-gray-700 hover:bg-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750'}`}>
+                {filteredSongs.map((song, index) => (
+                  <tr key={song.id} className={`border-b border-gray-700 hover:bg-gray-700 transition-colors ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-750'} ${selectedSongs.has(song.id) ? 'ring-2 ring-purple-500 bg-purple-900/20' : ''}`}>
+                    <td className="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        checked={selectedSongs.has(song.id)}
+                        onChange={() => handleSongSelect(song.id)}
+                        className="w-4 h-4 text-purple-600 bg-gray-700 border-gray-600 rounded focus:ring-purple-500 focus:ring-2"
+                      />
+                    </td>
                     <td className="px-4 py-3">
                       <span className="text-white font-medium">
                         {extractValue(song.fields['Song ID']) || 'Unknown'}
