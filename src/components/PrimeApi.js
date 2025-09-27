@@ -10,12 +10,12 @@ class PrimeApi {
     return now.toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, -5)
   }
 
-  // Generate log filename with clean naming
-  generateLogFilename(endpoint) {
+  // Generate log filename with CLASSNAME_table_timestamp format
+  generateLogFilename(table, operation) {
     const timestamp = this.generateTimestamp()
-    // Clean the endpoint name to remove special characters
-    const cleanEndpoint = endpoint.replace(/[^a-zA-Z0-9_-]/g, '_')
-    return `${timestamp}_PRIMEAPI_${cleanEndpoint}.json`
+    // Clean the operation name to remove special characters
+    const cleanOperation = operation.replace(/[^a-zA-Z0-9_-]/g, '_')
+    return `PRIMEAPI_${table}_${cleanOperation}_${timestamp}.json`
   }
 
   // Write log to file and localStorage
@@ -31,9 +31,12 @@ class PrimeApi {
       const logKey = `api_log_${filename}`
       localStorage.setItem(logKey, JSON.stringify(logData, null, 2))
       
-      // Also write to file system via log server
+      // Also write to file system via log server (Vercel API or localhost)
       try {
-        await fetch('http://localhost:3001/api/write-log', {
+        const baseUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:3001' 
+          : '';
+        await fetch(`${baseUrl}/api/write-log`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -106,7 +109,7 @@ class PrimeApi {
 
     // Generate log filename and write log
     const endpointName = endpoint.split('/').filter(Boolean).join('_')
-    const logFilename = this.generateLogFilename(endpointName)
+    const logFilename = this.generateLogFilename('API_DIRECT', endpointName)
     
     await this.writeLog(logFilename, {
       request: requestData,
@@ -125,8 +128,11 @@ class PrimeApi {
 
   // Get user by username
   async getUserByUsername(username) {
-    // Use local proxy to avoid CORS issues
-    const proxyUrl = `http://localhost:3001/api/primeapi-proxy?username=${username}`
+    // Use proxy to avoid CORS issues (Vercel API or localhost)
+    const baseUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3001' 
+      : '';
+    const proxyUrl = `${baseUrl}/api/primeapi-proxy?username=${username}`
     
     try {
       const response = await fetch(proxyUrl)
@@ -145,8 +151,11 @@ class PrimeApi {
 
   // Get TikTok user posts
   async getUserPosts(secUid, count = 5, cursor = null) {
-    // Use local proxy to avoid CORS issues
-    let proxyUrl = `http://localhost:3001/api/user-posts-proxy?secUid=${secUid}&count=${count}`
+    // Use proxy to avoid CORS issues (Vercel API or localhost)
+    const baseUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3001' 
+      : '';
+    let proxyUrl = `${baseUrl}/api/user-posts-proxy?secUid=${secUid}&count=${count}`
     if (cursor) {
       proxyUrl += `&cursor=${cursor}`
     }
@@ -180,7 +189,7 @@ class PrimeApi {
     }
 
     // Generate log filename and write log with better naming
-    const logFilename = this.generateLogFilename(`posts_${secUid.slice(-8)}_count${count}`)
+    const logFilename = this.generateLogFilename('POSTS', `user_${secUid.slice(-8)}_count${count}`)
     
     await this.writeLog(logFilename, {
       request: requestData,
@@ -199,8 +208,11 @@ class PrimeApi {
 
   // Get TikTok music info by music ID
   async getMusicInfo(musicId) {
-    // Use local proxy to avoid CORS issues
-    const proxyUrl = `http://localhost:3001/api/music-info-proxy?musicId=${musicId}`
+    // Use proxy to avoid CORS issues (Vercel API or localhost)
+    const baseUrl = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3001' 
+      : '';
+    const proxyUrl = `${baseUrl}/api/music-info-proxy?musicId=${musicId}`
     
     const requestData = {
       url: proxyUrl,
@@ -229,7 +241,7 @@ class PrimeApi {
     }
 
     // Generate log filename and write log with better naming  
-    const logFilename = this.generateLogFilename(`songs_${musicId}`)
+    const logFilename = this.generateLogFilename('SONGS', `music_${musicId}`)
     
     await this.writeLog(logFilename, {
       request: requestData,

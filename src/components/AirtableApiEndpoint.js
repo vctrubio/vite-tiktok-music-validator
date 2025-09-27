@@ -50,11 +50,12 @@ class AirtableApiEndpoint {
     return now.toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, -5)
   }
 
-  // Generate log filename
-  generateLogFilename(endpoint, table = null) {
+  // Generate log filename with CLASSNAME_table_timestamp format
+  generateLogFilename(table, operation) {
     const timestamp = this.generateTimestamp()
-    const tableStr = table ? `_${table}` : ''
-    return `${timestamp}_AIRTABLE_${endpoint}${tableStr}.json`
+    // Clean the operation name to remove special characters
+    const cleanOperation = operation.replace(/[^a-zA-Z0-9_-]/g, '_')
+    return `AIRTABLE_${table}_${cleanOperation}_${timestamp}.json`
   }
 
   // Write log to file and localStorage
@@ -70,9 +71,12 @@ class AirtableApiEndpoint {
       const logKey = `api_log_${filename}`
       localStorage.setItem(logKey, JSON.stringify(logData, null, 2))
       
-      // Also write to file system via API endpoint
+      // Also write to file system via API endpoint (Vercel API or localhost)
       try {
-        await fetch('http://localhost:3001/api/write-log', {
+        const baseUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:3001' 
+          : '';
+        await fetch(`${baseUrl}/api/write-log`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -149,8 +153,10 @@ class AirtableApiEndpoint {
     }
 
     // Generate log filename and write log
-    const endpointName = endpoint.split('/').filter(Boolean).join('_')
-    const logFilename = this.generateLogFilename(endpointName)
+    const endpointParts = endpoint.split('/').filter(Boolean)
+    const tableName = endpointParts[endpointParts.length - 1] || 'UNKNOWN'
+    const operation = requestData.method || 'GET'
+    const logFilename = this.generateLogFilename(tableName.toUpperCase(), operation)
     
     await this.writeLog(logFilename, {
       request: requestData,
