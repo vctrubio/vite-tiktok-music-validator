@@ -184,6 +184,7 @@ function Songs() {
                 <tr>
                   <th className="px-4 py-3 text-gray-300 font-medium">Song ID</th>
                   <th className="px-4 py-3 text-gray-300 font-medium">Music Title</th>
+                  <th className="px-4 py-3 text-gray-300 font-medium">Username</th>
                   <th className="px-4 py-3 text-gray-300 font-medium">Status</th>
                   <th className="px-4 py-3 text-gray-300 font-medium">Notified</th>
                   <th className="px-4 py-3 text-gray-300 font-medium">Last Checked</th>
@@ -204,14 +205,19 @@ function Songs() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
+                      <span className="text-blue-400 font-medium">
+                        {song.username ? `@${song.username}` : 'Unknown User'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-xs font-medium flex items-center gap-1 w-fit ${getStatusColor(extractValue(song.fields['Availability Status']))}`}>
                         {getStatusIcon(extractValue(song.fields['Availability Status']))}
                         {extractValue(song.fields['Availability Status']) || 'Unknown'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={extractValue(song.fields['Notified']) ? 'text-green-400' : 'text-yellow-400'}>
-                        {extractValue(song.fields['Notified']) ? '✅' : '⏳'}
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${extractValue(song.fields['Notified']) ? 'bg-green-900 text-green-200' : 'bg-yellow-900 text-yellow-200'}`}>
+                        {extractValue(song.fields['Notified']) ? 'Yes' : 'No'}
                       </span>
                     </td>
                     <td className="px-4 py-3">
@@ -228,7 +234,7 @@ function Songs() {
                           }}
                           className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-1 rounded-lg text-xs font-medium transition-colors"
                         >
-                          🔗 Open
+                          Open TikTok
                         </button>
                       ) : (
                         <span className="text-gray-500 text-xs">-</span>
