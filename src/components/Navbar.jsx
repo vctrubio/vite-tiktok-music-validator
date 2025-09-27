@@ -4,7 +4,8 @@ function Navbar() {
   const location = useLocation()
 
   const navItems = [
-    { path: '/', label: 'Users', icon: '👥' },
+    { path: '/', label: 'Home', icon: '🏠' },
+    { path: '/users', label: 'Users', icon: '👥' },
     { path: '/posts', label: 'Posts', icon: '📱' },
     { path: '/songs', label: 'Songs', icon: '🎵' },
     { path: '/debug', label: 'Debug', icon: '🔧' }
