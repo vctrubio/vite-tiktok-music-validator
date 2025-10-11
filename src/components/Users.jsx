@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import AirtableApiEndpoint from './AirtableApiEndpoint'
 import PrimeApi from './PrimeApi'
+import { useTheme } from '../context/ThemeContext'
 
 function Users() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [api] = useState(() => new AirtableApiEndpoint())
+  const { choose } = useTheme()
 
   useEffect(() => {
     loadUsers()
@@ -61,10 +63,10 @@ function Users() {
           View and manage TikTok users from Airtable
         </p>
         
-        <button 
+        <button
           onClick={refreshData}
           disabled={loading}
-          className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg disabled:opacity-50"
+          className={`${choose('bg-blue-600 hover:bg-blue-700', 'bg-violet-600 hover:bg-violet-700')} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg disabled:opacity-50`}
         >
           {loading ? 'Loading...' : '🔄 Refresh Data'}
         </button>
@@ -87,7 +89,7 @@ function Users() {
         
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <div className={`animate-spin rounded-full h-8 w-8 border-b-2 mx-auto ${choose('border-blue-500', 'border-violet-500')}`}></div>
             <p className="text-gray-400 mt-2">Loading users from Airtable...</p>
           </div>
         ) : users.length === 0 ? (
@@ -307,14 +309,14 @@ function UserCard({ user, onRefresh }) {
             onChange={(e) => setCount(Math.max(1, parseInt(e.target.value) || 1))}
             min="1"
             max="50"
-            className="w-16 px-2 py-1 rounded bg-gray-600 text-white text-sm border border-gray-500 focus:border-blue-500 focus:outline-none"
+            className={`w-16 px-2 py-1 rounded bg-gray-600 text-white text-sm border border-gray-500 focus:outline-none ${choose('focus:border-blue-500', 'focus:border-violet-500')}`}
           />
         </div>
         
         <button
           onClick={fetchPosts}
           disabled={loading}
-          className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className={`w-full text-white px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 ${choose('bg-blue-600 hover:bg-blue-700', 'bg-violet-600 hover:bg-violet-700')}`}
         >
           {loading ? 'Fetching...' : `Fetch ${count} Posts`}
         </button>
