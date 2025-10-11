@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider, useTheme } from './context/ThemeContext'
 import AuthModal from './components/AuthModal'
 import Navbar from './components/Navbar'
 import HomeCalculator from './components/HomeCalculator'
@@ -11,10 +12,11 @@ import Debug from './components/Debug'
 
 function AppContent() {
   const { needsAuth, authenticate, isLoading } = useAuth()
+  const { choose } = useTheme()
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-blue-900 flex items-center justify-center">
+      <div className={`min-h-screen bg-gradient-to-br from-slate-900 ${choose('to-blue-900', 'to-violet-900')} flex items-center justify-center`}>
         <div className="text-white text-xl">Loading...</div>
       </div>
     )
@@ -22,7 +24,7 @@ function AppContent() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-blue-900">
+      <div className={`min-h-screen bg-gradient-to-br from-slate-900 ${choose('to-blue-900', 'to-violet-900')}`}>
         {needsAuth && <AuthModal onAuthenticate={authenticate} />}
         <Navbar />
         <Routes>
@@ -32,7 +34,7 @@ function AppContent() {
           <Route path="/songs" element={<Songs />} />
           <Route path="/debug" element={<Debug />} />
         </Routes>
-        <Toaster 
+        <Toaster
           position="top-right"
           theme="dark"
           richColors
@@ -46,7 +48,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </AuthProvider>
   )
 }
