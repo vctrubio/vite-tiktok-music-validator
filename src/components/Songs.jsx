@@ -278,7 +278,7 @@ function Songs() {
         
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <div className={`animate-spin rounded-full h-8 w-8 border-b-2 mx-auto ${choose('border-blue-500', 'border-violet-500')}`}></div>
             <p className="text-gray-400 mt-2">Loading songs from Airtable...</p>
           </div>
         ) : filteredSongs.length === 0 ? (
