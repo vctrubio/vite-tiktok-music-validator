@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import AirtableApiEndpoint from './AirtableApiEndpoint'
 import ValidateSongs from './ValidateSongs'
+import { useTheme } from '../context/ThemeContext'
 
 function Songs() {
   const [allSongs, setAllSongs] = useState([]) // Store all songs from API
@@ -15,6 +16,7 @@ function Songs() {
   const [validationResults, setValidationResults] = useState(null)
   const [api] = useState(() => new AirtableApiEndpoint())
   const [validator] = useState(() => new ValidateSongs(api))
+  const { choose } = useTheme()
 
   useEffect(() => {
     loadAllSongs()
@@ -180,10 +182,10 @@ function Songs() {
         </p>
         
         <div className="flex gap-4 justify-center mb-6">
-          <button 
+          <button
             onClick={refreshData}
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg disabled:opacity-50"
+            className={`${choose('bg-blue-600 hover:bg-blue-700', 'bg-violet-600 hover:bg-violet-700')} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg disabled:opacity-50`}
           >
             {loading ? 'Loading...' : '🔄 Refresh Data'}
           </button>
@@ -200,12 +202,12 @@ function Songs() {
         </div>
 
         {validationProgress && (
-          <div className="bg-blue-900 border border-blue-700 rounded-lg p-4 mb-6">
-            <p className="text-blue-300 font-semibold">🔄 Validation Progress:</p>
-            <p className="text-blue-200 text-sm">{validator.getProgressMessage(validationProgress)}</p>
-            <div className="w-full bg-blue-800 rounded-full h-2 mt-2">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+          <div className={`${choose('bg-blue-900 border border-blue-700', 'bg-violet-900 border border-violet-700')} rounded-lg p-4 mb-6`}>
+            <p className={`${choose('text-blue-300', 'text-violet-300')} font-semibold`}>🔄 Validation Progress:</p>
+            <p className={`${choose('text-blue-200', 'text-violet-200')} text-sm`}>{validator.getProgressMessage(validationProgress)}</p>
+            <div className={`${choose('bg-blue-800', 'bg-violet-800')} w-full rounded-full h-2 mt-2`}>
+              <div
+                className={`${choose('bg-blue-500', 'bg-violet-500')} h-2 rounded-full transition-all duration-300`}
                 style={{ width: `${(validationProgress.current / validationProgress.total) * 100}%` }}
               ></div>
             </div>
@@ -228,7 +230,7 @@ function Songs() {
           <button
             onClick={() => setFilter('all')}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              filter === 'all' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              filter === 'all' ? choose('bg-blue-600 text-white', 'bg-violet-600 text-white') : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             All Songs
@@ -276,7 +278,7 @@ function Songs() {
         
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <div className={`animate-spin rounded-full h-8 w-8 border-b-2 mx-auto ${choose('border-blue-500', 'border-violet-500')}`}></div>
             <p className="text-gray-400 mt-2">Loading songs from Airtable...</p>
           </div>
         ) : filteredSongs.length === 0 ? (
@@ -326,7 +328,7 @@ function Songs() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-blue-400 font-medium">
+                      <span className={`${choose('text-blue-400', 'text-violet-400')} font-medium`}>
                         {song.username ? `@${song.username}` : 'Unknown User'}
                       </span>
                     </td>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import AirtableApiEndpoint from './AirtableApiEndpoint'
 import PrimeApi from './PrimeApi'
+import { useTheme } from '../context/ThemeContext'
 
 function HomeCalculator() {
   const [users, setUsers] = useState([])
@@ -11,6 +12,7 @@ function HomeCalculator() {
   const [error, setError] = useState(null)
   const [airtableApi] = useState(() => new AirtableApiEndpoint())
   const [primeApi] = useState(() => new PrimeApi())
+  const { choose } = useTheme()
 
   useEffect(() => {
     loadUsers()
@@ -131,8 +133,12 @@ function HomeCalculator() {
               value={customUsername}
               onChange={(e) => setCustomUsername(e.target.value)}
               placeholder="Enter TikTok username (without @)"
-              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-blue-500 focus:outline-none"
+              className={`w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none ${choose('focus:border-blue-500', 'focus:border-violet-500')}`}
               required
+              aria-label="TikTok username"
+              inputMode="text"
+              autoComplete="off"
+              autoFocus
             />
             <p className="text-gray-400 text-sm mt-1">
               The system will check TikTok and add user data to your database

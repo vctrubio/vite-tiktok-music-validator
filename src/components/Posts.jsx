@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import AirtableApiEndpoint from './AirtableApiEndpoint'
+import { useTheme } from '../context/ThemeContext'
 
 function Posts() {
   const [posts, setPosts] = useState([])
@@ -7,6 +8,7 @@ function Posts() {
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('all') // all, recent, old
   const [api] = useState(() => new AirtableApiEndpoint())
+  const { choose } = useTheme()
 
   useEffect(() => {
     loadPosts()
@@ -111,7 +113,7 @@ function Posts() {
         
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <div className={`animate-spin rounded-full h-8 w-8 border-b-2 mx-auto ${choose('border-blue-500', 'border-violet-500')}`}></div>
             <p className="text-gray-400 mt-2">Loading posts from Airtable...</p>
           </div>
         ) : posts.length === 0 ? (
