@@ -138,6 +138,7 @@ function HomeCalculator() {
               aria-label="TikTok username"
               inputMode="text"
               autoComplete="off"
+              autoFocus
             />
             <p className="text-gray-400 text-sm mt-1">
               The system will check TikTok and add user data to your database
