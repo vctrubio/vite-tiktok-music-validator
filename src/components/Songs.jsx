@@ -202,12 +202,12 @@ function Songs() {
         </div>
 
         {validationProgress && (
-          <div className="bg-blue-900 border border-blue-700 rounded-lg p-4 mb-6">
-            <p className="text-blue-300 font-semibold">🔄 Validation Progress:</p>
-            <p className="text-blue-200 text-sm">{validator.getProgressMessage(validationProgress)}</p>
-            <div className="w-full bg-blue-800 rounded-full h-2 mt-2">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+          <div className={`${choose('bg-blue-900 border border-blue-700', 'bg-violet-900 border border-violet-700')} rounded-lg p-4 mb-6`}>
+            <p className={`${choose('text-blue-300', 'text-violet-300')} font-semibold`}>🔄 Validation Progress:</p>
+            <p className={`${choose('text-blue-200', 'text-violet-200')} text-sm`}>{validator.getProgressMessage(validationProgress)}</p>
+            <div className={`${choose('bg-blue-800', 'bg-violet-800')} w-full rounded-full h-2 mt-2`}>
+              <div
+                className={`${choose('bg-blue-500', 'bg-violet-500')} h-2 rounded-full transition-all duration-300`}
                 style={{ width: `${(validationProgress.current / validationProgress.total) * 100}%` }}
               ></div>
             </div>
