@@ -182,10 +182,10 @@ function Songs() {
         </p>
         
         <div className="flex gap-4 justify-center mb-6">
-          <button 
+          <button
             onClick={refreshData}
             disabled={loading}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg disabled:opacity-50"
+            className={`${choose('bg-blue-600 hover:bg-blue-700', 'bg-violet-600 hover:bg-violet-700')} text-white px-6 py-3 rounded-lg font-semibold transition-colors shadow-lg disabled:opacity-50`}
           >
             {loading ? 'Loading...' : '🔄 Refresh Data'}
           </button>
