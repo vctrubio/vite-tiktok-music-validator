@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import AirtableApiEndpoint from './AirtableApiEndpoint'
 import ValidateSongs from './ValidateSongs'
+import { useTheme } from '../context/ThemeContext'
 
 function Songs() {
   const [allSongs, setAllSongs] = useState([]) // Store all songs from API
