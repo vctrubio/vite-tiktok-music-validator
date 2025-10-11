@@ -16,6 +16,7 @@ function Songs() {
   const [validationResults, setValidationResults] = useState(null)
   const [api] = useState(() => new AirtableApiEndpoint())
   const [validator] = useState(() => new ValidateSongs(api))
+  const { choose } = useTheme()
 
   useEffect(() => {
     loadAllSongs()
